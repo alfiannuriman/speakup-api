@@ -19,4 +19,38 @@ class Database
             throw $e;
         }
     }
+
+    public function query($query)
+    {
+        $this->__connection->prepare($query)->execute();
+        return $this;
+    }
+
+    public function prepareQuery($query, $params)
+    {
+        $this->__connection = $this->__connection->prepare($query);
+        $this->__connection->execute($params);
+        
+        return $this;
+    }
+
+    public function first()
+    {
+        return $this->__connection->fetch();
+    }
+
+    public function get()
+    {
+        return $this->__connection->fetchAll();
+    }
+
+    public function count()
+    {
+        return $this->__connection->rowCount();
+    }
+
+    public function exists()
+    {
+        return ($this->count() > 0);
+    }
 }

@@ -1,8 +1,9 @@
 <?php
 
-require 'lib/Response.php';
-require 'config.php';
-require 'lib/Database.php';
+require_once 'lib/Response.php';
+require_once 'config.php';
+
+require_once 'app/Auth.php';
 
 $request = $_SERVER['REQUEST_URI'];
 
@@ -15,14 +16,9 @@ switch ($request) {
         return Lib\Response::restJSON(['message' => 'SpeakUp API V1']);
         break;
 
-    case '/db/test':
-        
-        try {
-            $database = new \Lib\Database();
-            return Lib\Response::restJSON(['message' => 'Database connection looks good']);
-        } catch (\PDOException $e) {
-            return Lib\Response::restJSON(['errors' => 'Database error : ' . $e->getMessage()], 500);
-        }
+    case '/auth/register':
+        $authModule = new App\Auth;
+        return $authModule->register();
         break;
     
     default:
