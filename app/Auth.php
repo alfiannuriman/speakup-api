@@ -39,6 +39,77 @@ class Auth
         }
     }
 
+    public function login()
+    {
+        try {
+            $request = $_POST;
+
+            $username = $request['username'];
+            $password = $request['password'];
+
+            if ( ($user = $this->findUserByUsername($username)) !== false) {
+
+                if ($this->verifyPasswordHash($password, $user->password)) {
+                    $user->token = $auth_token = $this->setUserAuthToken($user->user_id);
+
+                    if ($auth_token !== false) {
+                        return Response::restJSON(['data' => $user]);
+                    }
+                }
+
+                return Response::restJSON(['errors' => 'Login failed, please try again'], 400);
+
+            } else {
+                return Response::restJSON(['errors' => 'User not found'], 404);
+            }
+        } catch (\Exception $e) {
+            return Response::restJSON(['errors' => $e->getMessage()], 500);
+        }
+    }
+
+    protected function generateAuthToken()
+    {
+        return bin2hex(random_bytes(20));
+    }
+    
+    protected function setUserAuthToken($user_id)
+    {
+        try {
+
+            $db = new Database();
+
+            $token = $this->generateAuthToken();
+            $query = "UPDATE act_users SET token = :token WHERE user_id = :user_id";
+
+            $set_token = $db->prepareQuery($query , [
+                ':token' => $token,
+                ':user_id' => $user_id
+            ]);
+
+            return $set_token ? $token : false;
+
+        } catch (\PDOException $e) {
+            throw $e;
+        }
+    }
+
+    protected function findUserByUsername($username)
+    {
+        try {
+
+            $db = new Database();
+
+            $query = "SELECT * FROM act_users WHERE code = :username LIMIT 0,1";
+
+            return $db->prepareQuery($query , [
+                ':username' => strtolower($username)
+            ])->first();
+
+        } catch (\PDOException $e) {
+            throw $e;
+        }
+    }
+
     protected function createUser(array $data, $status = null)
     {
         try {
@@ -49,7 +120,7 @@ class Auth
                         VALUES (:username, :name, :email, :password, :status, :create_dtm)";
 
             $data = [
-                ':username' => $data['username'],
+                ':username' => strtolower($data['username']),
                 ':name' => isset($data['name']) ? $data['name'] : $data['username'],
                 ':email' => $data['email'],
                 ':password' => $this->generatePasswordHash($data['password']),
@@ -72,7 +143,7 @@ class Auth
 
             $query = "SELECT user_id FROM act_users WHERE code = :username AND email = :email LIMIT 0,1";
             $is_user_exists = $db->prepareQuery($query , [
-                ':username' => $username,
+                ':username' => strtolower($username),
                 ':email' => $email
             ])->exists();
 

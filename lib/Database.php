@@ -36,7 +36,7 @@ class Database
 
     public function first()
     {
-        return $this->__connection->fetch();
+        return $this->__connection->fetch(\PDO::FETCH_OBJ);
     }
 
     public function get()

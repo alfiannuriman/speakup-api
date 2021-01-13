@@ -20,6 +20,11 @@ switch ($request) {
         $authModule = new App\Auth;
         return $authModule->register();
         break;
+
+    case '/auth/login':
+        $authModule = new App\Auth;
+        return $authModule->login();
+        break;
     
     default:
         return Lib\Response::restJSON(['message' => "There's nothing in here"], 404);
