@@ -67,6 +67,22 @@ class Auth
         }
     }
 
+    public static function getLoggedUser()
+    {
+        $headers = getallheaders();
+
+        if (array_key_exists('Authorization', $headers)) {
+            $auth_token = trim(str_replace('Bearer', '', $headers['Authorization']));
+            $user = self::findUserByToken($auth_token);
+
+            if ($user !== null) {
+                return $user;
+            }
+        }
+
+        return false;
+    }
+
     protected function generateAuthToken()
     {
         return bin2hex(random_bytes(20));
@@ -87,6 +103,23 @@ class Auth
             ]);
 
             return $set_token ? $token : false;
+
+        } catch (\PDOException $e) {
+            throw $e;
+        }
+    }
+
+    protected function findUserByToken($token)
+    {
+        try {
+
+            $db = new Database();
+
+            $query = "SELECT * FROM act_users WHERE token = :token LIMIT 0,1";
+
+            return $db->prepareQuery($query , [
+                ':token' => $token
+            ])->first();
 
         } catch (\PDOException $e) {
             throw $e;

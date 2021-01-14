@@ -4,6 +4,7 @@ require_once 'lib/Response.php';
 require_once 'config.php';
 
 require_once 'app/Auth.php';
+require_once 'app/Post.php';
 
 $request = $_SERVER['REQUEST_URI'];
 
@@ -24,6 +25,15 @@ switch ($request) {
     case '/auth/login':
         $authModule = new App\Auth;
         return $authModule->login();
+        break;
+
+    case '/test':
+        return Lib\Response::restJSON(['data' => \App\Auth::getLoggedUser()]);
+        break;
+    
+    case '/post':
+        $postModule = new App\Post;
+        return $postModule->store();
         break;
     
     default:
