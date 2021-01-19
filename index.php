@@ -28,7 +28,7 @@ switch ($request) {
         break;
 
     case '/test':
-        return Lib\Response::restJSON(['data' => \App\Auth::getLoggedUser()]);
+        return Lib\Response::restJSON(['data' => App\Auth::getLoggedUser()]);
         break;
     
     case '/post':

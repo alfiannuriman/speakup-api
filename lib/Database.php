@@ -6,6 +6,7 @@ class Database
 {
     protected $__connection;
     protected $__configs;
+    protected $__query;
 
     public function __construct()
     {
@@ -22,35 +23,40 @@ class Database
 
     public function query($query)
     {
-        $this->__connection->prepare($query)->execute();
+        $this->__query = $this->__connection->prepare($query)->execute();
         return $this;
     }
 
     public function prepareQuery($query, $params)
     {
-        $this->__connection = $this->__connection->prepare($query);
-        $this->__connection->execute($params);
+        $this->__query = $this->__connection->prepare($query);
+        $this->__query->execute($params);
         
         return $this;
     }
 
     public function first()
     {
-        return $this->__connection->fetch(\PDO::FETCH_OBJ);
+        return $this->__query->fetch(\PDO::FETCH_OBJ);
     }
 
     public function get()
     {
-        return $this->__connection->fetchAll();
+        return $this->__query->fetchAll();
     }
 
     public function count()
     {
-        return $this->__connection->rowCount();
+        return $this->__query->rowCount();
     }
 
     public function exists()
     {
         return ($this->count() > 0);
+    }
+
+    public function insertedId()
+    {
+        return $this->__connection->lastInsertId();
     }
 }
