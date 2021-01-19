@@ -42,7 +42,7 @@ class Database
 
     public function get()
     {
-        return $this->__query->fetchAll();
+        return $this->__query->fetchAll(\PDO::FETCH_OBJ);
     }
 
     public function count()

@@ -19,6 +19,13 @@ class Post
     const POST_STATUS_DELETED = 2;
     const POST_STATUS_ARCHIVED = 3;
 
+    public function index()
+    {
+        $request = $_GET;
+        
+        return Response::restJSON(['data' => $this->getUserPost($request)]);
+    }
+
     public function store()
     {
         try {
@@ -28,9 +35,6 @@ class Post
 
             if ($article_id !== false) {
                 if (isset($_FILES['medias'])) {
-                    // return print_r($_FILES['medias']);
-                    // exit();
-                    // return Response::restJSON(['message' => $_FILES['medias']]);
                     if ($this->storePostMedia($article_id, $_FILES['medias'])) {
                         return Response::restJSON(['message' => 'Create Post success']);
                     }
@@ -41,6 +45,72 @@ class Post
 
         } catch (\Exception $e) {
             return Response::restJSON(['errors' => $e->getMessage()], 500);
+        }
+    }
+
+    protected function getUserPost(array $params = null)
+    {
+        try {
+
+            $db = new Database();
+            $user = \App\Auth::getLoggedUser();
+
+            $response = [];
+
+            if ($user !== false) {
+
+                $query = "SELECT * FROM post_article WHERE created_by = :user_id";
+                $query_params = [];
+
+                if (!is_null($params)) {
+                    
+                    if (isset($params['article_id'])) {
+                        $query .= " AND article_id = :article_id";
+                        $query_params[':article_id'] = $params['article_id'];
+                    }
+
+                    if (isset($params['scope'])) {
+                        $query .= " AND scope = :scope";
+                        $query_params[':scope'] = $params['scope'];
+                    }
+
+                    if (isset($params['limit'])) {
+                        $query .= " LIMIT :limited";
+                        $query_params[':limited'] = $params['limit'];
+                    }
+
+                }
+
+                $query_params[':user_id'] = $user->user_id;
+
+                $posts = $db->prepareQuery($query, $query_params)->get();
+
+                if (count($posts) > 0) {
+                    foreach ($posts as $key => $post) {
+                        $post->medias = $this->getPostMedia($post->article_id);
+                        array_push($response, $post);
+                    }
+                }
+            }
+
+            return $response;
+
+        } catch (\PDOException $e) {
+            throw $e;
+        }
+    }
+
+    protected function getPostMedia($article_id)
+    {
+        try {
+
+            $db = new Database();
+            $query_post = "SELECT * FROM post_article_media WHERE article_id = :article_id";
+
+            return $posts = $db->prepareQuery($query_post, [':article_id' => $article_id])->get();
+
+        } catch (\PDOException $e) {
+            throw $e;
         }
     }
 
