@@ -21,9 +21,15 @@ class Post
 
     public function index()
     {
-        $request = $_GET;
+        try {
+
+            $request = $_GET;
         
-        return Response::apiResponse(200, $this->getUserPost($request));
+            return Response::apiResponse(200, null, $this->getUserPost($request));
+
+        } catch (\Exception $e) {
+            return Response::apiResponse(500, $e->getMessage());
+        }
     }
 
     public function store()
@@ -36,15 +42,15 @@ class Post
             if ($article_id !== false) {
                 if (isset($_FILES['medias'])) {
                     if ($this->storePostMedia($article_id, $_FILES['medias'])) {
-                        return Response::apiResponse(200, null, 'Create Post success');
+                        return Response::apiResponse(200, 'Create Post success');
                     }
                 }
             }
 
-            return Response::apiResponse(500, null, 'Create Post failed, please try again');
+            return Response::apiResponse(500, 'Create Post failed, please try again');
 
         } catch (\Exception $e) {
-            return Response::apiResponse(500, null, $e->getMessage());
+            return Response::apiResponse(500, $e->getMessage());
         }
     }
 

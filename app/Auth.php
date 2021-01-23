@@ -69,7 +69,7 @@ class Auth
 
     public function user()
     {
-        return Response::apiResponse(200, static::getLoggedUser());
+        return Response::apiResponse(200, null, static::getLoggedUser());
     }
 
     public static function getLoggedUser()
