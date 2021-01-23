@@ -69,6 +69,39 @@ class User
             throw $e;
         }
     }
+
+    protected function getUserFollower($user_id)
+    {
+        try {
+            $db = new Database();
+            
+            $query = "SELECT COUNT(user_follow_id) AS total FROM `act_user_follows` WHERE object_id = :user_id AND `status` = 0";
+            $query_params = [':user_id' => $user->user_id];
+            $follower = $db->prepareQuery($query, $query_params);
+
+            return $follower ? $follower->first()->total : 0;
+
+        } catch (\PDOException $e) {
+            throw $e;
+        }
+    }
+
+
+    protected function getUserFollowing($user_id)
+    {
+        try {
+            $db = new Database();
+            
+            $query = "SELECT COUNT(user_follow_id) AS total FROM `act_user_follows` WHERE subject_id = :user_id AND `status` = 0";
+            $query_params = [':user_id' => $user->user_id];
+            $following = $db->prepareQuery($query, $query_params);
+
+            return $following ? $following->first()->total : 0;
+
+        } catch (\PDOException $e) {
+            throw $e;
+        }
+    }
     
     protected function saveUserProfile($user, array $data)
     {

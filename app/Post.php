@@ -149,7 +149,9 @@ class Post
 
                 if ($inserted) {
                     $article_id = $db->insertedId();
-                    return $this->createPostSubject($article_id);
+                    $this->createPostSubject($article_id);
+
+                    return $article_id;
                 }
 
             }
