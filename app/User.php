@@ -63,7 +63,14 @@ class User
             
             $query_params = [':user_id' => $user->user_id];
 
-            return $db->prepareQuery($query, $query_params)->first();
+            $user_profile = $db->prepareQuery($query, $query_params)->first();
+
+            if ($user_profile !== false) {
+                $user_profile->followers = $this->getUserFollower($user->user_id);
+                $user_profile->following = $this->getUserFollowing($user->user_id);
+            }
+
+            return $user_profile;
 
         } catch (\PDOException $e) {
             throw $e;
@@ -76,7 +83,7 @@ class User
             $db = new Database();
             
             $query = "SELECT COUNT(user_follow_id) AS total FROM `act_user_follows` WHERE object_id = :user_id AND `status` = 0";
-            $query_params = [':user_id' => $user->user_id];
+            $query_params = [':user_id' => $user_id];
             $follower = $db->prepareQuery($query, $query_params);
 
             return $follower ? $follower->first()->total : 0;
@@ -93,7 +100,7 @@ class User
             $db = new Database();
             
             $query = "SELECT COUNT(user_follow_id) AS total FROM `act_user_follows` WHERE subject_id = :user_id AND `status` = 0";
-            $query_params = [':user_id' => $user->user_id];
+            $query_params = [':user_id' => $user_id];
             $following = $db->prepareQuery($query, $query_params);
 
             return $following ? $following->first()->total : 0;
