@@ -23,7 +23,7 @@ class Post
     {
         $request = $_GET;
         
-        return Response::restJSON(['data' => $this->getUserPost($request)]);
+        return Response::apiResponse(200, $this->getUserPost($request));
     }
 
     public function store()
@@ -36,15 +36,15 @@ class Post
             if ($article_id !== false) {
                 if (isset($_FILES['medias'])) {
                     if ($this->storePostMedia($article_id, $_FILES['medias'])) {
-                        return Response::restJSON(['message' => 'Create Post success']);
+                        return Response::apiResponse(200, null, 'Create Post success');
                     }
                 }
             }
 
-            return Response::restJSON(['message' => 'Create Post failed, please try again'], 500);
+            return Response::apiResponse(500, null, 'Create Post failed, please try again');
 
         } catch (\Exception $e) {
-            return Response::restJSON(['errors' => $e->getMessage()], 500);
+            return Response::apiResponse(500, null, $e->getMessage());
         }
     }
 

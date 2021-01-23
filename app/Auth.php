@@ -26,16 +26,16 @@ class Auth
             if (!$this->isUserExists($email, $username)) {
 
                 if ( ($create_user = $this->createUser($request)) !== false ) {
-                    return Response::restJSON(['data' => $create_user]);
+                    return Response::apiResponse(200, 'User Registered Successfully', $create_user);
                 } else {
-                    return Response::restJSON(['errors' => 'Create user failed, please try again'], 500);
+                    return Response::apiResponse(500, 'Create user failed, please try again');
                 }
 
             } else {
-                return Response::restJSON(['errors' => 'User already exists'], 400);
+                return Response::apiResponse(400, 'User already exists');
             }
         } catch (\Exception $e) {
-            return Response::restJSON(['errors' => $e->getMessage()], 500);
+            return Response::apiResponse(500, $e->getMessage());
         }
     }
 
@@ -53,18 +53,23 @@ class Auth
                     $user->token = $auth_token = $this->setUserAuthToken($user->user_id);
 
                     if ($auth_token !== false) {
-                        return Response::restJSON(['data' => $user]);
+                        return Response::apiResponse(200, 'Login Successfull', $user);
                     }
                 }
 
-                return Response::restJSON(['errors' => 'Login failed, please try again'], 400);
+                return Response::apiResponse(400, 'Login failed, please try again');
 
             } else {
-                return Response::restJSON(['errors' => 'User not found'], 404);
+                return Response::apiResponse(404, 'User not found');
             }
         } catch (\Exception $e) {
-            return Response::restJSON(['errors' => $e->getMessage()], 500);
+            return Response::apiResponse(500, $e->getMessage());
         }
+    }
+
+    public function user()
+    {
+        return Response::apiResponse(200, static::getLoggedUser());
     }
 
     public static function getLoggedUser()

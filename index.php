@@ -28,6 +28,11 @@ switch ($request) {
         return $authModule->login();
         break;
 
+    case ($request == '/auth/user' && $request_method == 'GET'):
+        $authModule = new App\Auth;
+        return $authModule->user();
+        break;
+
     case '/test':
         return Lib\Response::restJSON(['data' => App\Auth::getLoggedUser()]);
         break;
