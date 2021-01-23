@@ -52,6 +52,11 @@ switch ($request) {
         $userModule = new App\User;
         return $userModule->show();
         break;
+
+    case ($request == '/user/profile' && $request_method == 'POST'):
+        $userModule = new App\User;
+        return $userModule->store();
+        break;
     
     default:
         return Lib\Response::restJSON([

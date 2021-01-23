@@ -40,8 +40,12 @@ class User
 
                 $request = $_POST;
 
-                $user_profile = $this->getUserProfile($user);
-                return Response::apiResponse(200, 'Profile getted successfully', $user_profile);
+                if ($this->saveUserProfile($user, $request)) {
+                    return Response::apiResponse(200, 'Profile saved successfully');
+                } else {
+                    return Response::apiResponse(500, 'Save profile failed');
+                }
+
             } else {
                 return Response::apiResponse(401, 'Access token not found');
             }
@@ -116,25 +120,64 @@ class User
 
             $db = new Database();
 
-            $query = "
-                INSERT INTO `act_user_detail`(
-                    `user_id`, `telepon`, `gender`, `birth_date`, `birth_place`
-                ) VALUES (
-                    :user_id, :telepon, :gender, :birth_date, :birth_place
-            )";
+            $query_find_profile = "SELECT detail_id FROM act_user_detail WHERE user_id = :user_id LIMIT 0,1";
+            $query_find_profile_params = [':user_id' => $user->user_id];
 
-            $query_params = [
-                ':user_id' => $user->user_id,
-                ':telepon' => $data['telepon']
-            ];
+            $find_user_profile = $db->prepareQuery($query_find_profile, $query_find_profile_params)->first();
 
-            $inserted = $db->prepareQuery($query , $data);
+            if ($find_user_profile !== false) {
 
-            if ($inserted) {
-                return true;
+                $query = "UPDATE `act_user_detail` SET 
+                    telepon = :telepon, gender = :gender, birth_date = :birth_date, birth_place = :birth_place, update_dtm = :update_dtm
+                     WHERE user_id = :user_id
+                ";
+
+                $query_params = [
+                    ':user_id' => $user->user_id,
+                    ':telepon' => $data['telepon'],
+                    ':gender' => $data['gender'],
+                    ':birth_date' => date('Y-m-d', strtotime($data['birth_date'])),
+                    ':birth_place' => $data['birth_place'],
+                    ':update_dtm' => date('Y-m-d H:i:s')
+                ];
+                
+            } else {
+                $query = "
+                    INSERT INTO `act_user_detail`(
+                        `user_id`, `telepon`, `gender`, `birth_date`, `birth_place`, `update_dtm`
+                    ) VALUES (
+                        :user_id, :telepon, :gender, :birth_date, :birth_place, :update_dtm
+                )";
+
+                $query_params = [
+                    ':user_id' => $user->user_id,
+                    ':telepon' => $data['telepon'],
+                    ':gender' => $data['gender'],
+                    ':birth_date' => date('Y-m-d', strtotime($data['birth_date'])),
+                    ':birth_place' => $data['birth_place'],
+                    ':update_dtm' => date('Y-m-d H:i:s')
+                ];
             }
 
-            return $inserted ? $db->insertedId() : false;
+            $inserted = $db->prepareQuery($query, $query_params);
+
+            if ($inserted) {
+                if (isset($data['full_name'])) {
+                    // UPDATE USER FULL NAME
+                    $query_user = "UPDATE act_users SET name = :full_name WHERE user_id = :user_id";
+                    $query_user_params = [
+                        ':full_name' => $data['full_name'],
+                        ':user_id' => $user->user_id
+                    ];
+    
+                    return $db->prepareQuery($query_user, $query_user_params);
+                }
+
+                return true;
+
+            } else {
+                return false;
+            }
 
         } catch (\PDOException $e) {
             throw $e;
