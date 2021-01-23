@@ -28,7 +28,7 @@ class Post
             return Response::apiResponse(200, null, $this->getUserPost($request));
 
         } catch (\Exception $e) {
-            return Response::apiResponse(500, $e->getMessage());
+            return Response::apiResponse(500, $e->getMessage(), []);
         }
     }
 
@@ -65,7 +65,7 @@ class Post
 
             if ($user !== false) {
 
-                $query = "SELECT * FROM post_article WHERE created_by = :user_id";
+                $query = "SELECT * FROM post_article JOIN post_article_subjects WHERE post_article_subjects.subject_id = :user_id GROUP BY post_article_subjects.article_id";
                 $query_params = [];
 
                 if (!is_null($params)) {
@@ -147,7 +147,77 @@ class Post
                     ':created_by' => $user->user_id
                 ]);
 
-                return $inserted ? $db->insertedId() : false;
+                if ($inserted) {
+                    $article_id = $db->insertedId();
+                    return $this->createPostSubject($article_id);
+                }
+
+            }
+
+            return false;
+
+        } catch (\PDOException $e) {
+            throw $e;
+        }
+    }
+
+    protected function createPostSubject($article_id)
+    {
+        try {
+
+            $db = new Database();
+
+            $user = \App\Auth::getLoggedUser();
+
+            if ($user !== false) {
+                $query_followers_user = "SELECT subject_id FROM `act_user_follows` WHERE object_id = :user_id AND `status` = 0";
+                
+                $followers = $db->prepareQuery($query_followers_user, [
+                    ':user_id' => $user->user_id
+                ])->get();
+
+                $this->savePostSubject($article_id, $user->user_id);
+
+                if ($followers && count($followers) > 0) {
+                    foreach ($followers as $follower) {
+                        $this->savePostSubject($article_id, $follower->subject_id);
+                    }
+                }
+
+            }
+
+            return true;
+
+        } catch (\PDOException $e) {
+            throw $e;
+        }
+    }
+
+    protected function savePostSubject($article_id, $subject_id)
+    {
+        try {
+
+            $db = new Database();
+
+            $user = \App\Auth::getLoggedUser();
+
+            if ($user !== false) {
+                $query = "
+                    INSERT INTO `post_article_subjects`(
+                        `article_id`, `subject_id`, `added_by`, `added_dtm`
+                    ) VALUES (
+                        :article_id, :subject_id, :added_by, :added_dtm
+                    )
+                ";
+
+                $query_params = [
+                    ':article_id' => $article_id,
+                    ':subject_id' => $subject_id,
+                    ':added_by' => $user->user_id,
+                    ':added_dtm' => date('Y-m-d H:i:s')
+                ];
+
+                return $db->prepareQuery($query, $query_params);
             }
 
             return false;

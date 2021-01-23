@@ -5,6 +5,7 @@ require_once 'config.php';
 
 require_once 'app/Auth.php';
 require_once 'app/Post.php';
+require_once 'app/User.php';
 
 $request = explode('?', $_SERVER['REQUEST_URI'], 2)[0];
 $request_method = $_SERVER['REQUEST_METHOD'];
@@ -46,7 +47,11 @@ switch ($request) {
         $postModule = new App\Post;
         return $postModule->index();
         break;
-    
+
+    case ($request == '/user/profile' && $request_method == 'GET'):
+        $userModule = new App\User;
+        return $userModule->show();
+        break;
     
     default:
         return Lib\Response::restJSON([
