@@ -52,7 +52,8 @@ switch ($request) {
         return Lib\Response::restJSON([
             'message' => "There's nothing in here",
             'data' => [
-                'route' => $request
+                'route' => $request,
+                'method' => $request_method
             ]
         ], 404);
         break;
