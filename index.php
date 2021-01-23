@@ -50,7 +50,7 @@ switch ($request) {
     
     default:
         return Lib\Response::restJSON([
-            'message' => "There's nothing in here",
+            'message' => "There's nothing in here, go back!",
             'data' => [
                 'route' => $request,
                 'method' => $request_method
