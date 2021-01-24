@@ -6,6 +6,8 @@ require_once 'config.php';
 require_once 'app/Auth.php';
 require_once 'app/Post.php';
 require_once 'app/User.php';
+require_once 'app/PostCounterSummary.php';
+require_once 'app/PostLikes.php';
 
 $request = explode('?', $_SERVER['REQUEST_URI'], 2)[0];
 $request_method = $_SERVER['REQUEST_METHOD'];
@@ -56,6 +58,11 @@ switch ($request) {
     case ($request == '/user/profile' && $request_method == 'POST'):
         $userModule = new App\User;
         return $userModule->store();
+        break;
+
+    case ($request == '/post/likes' && $request_method == 'POST'):
+        $postLikesModule = new App\PostLikes;
+        return $postLikesModule->store();
         break;
     
     default:
