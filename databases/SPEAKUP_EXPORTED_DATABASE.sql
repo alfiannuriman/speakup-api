@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 19, 2021 at 09:05 AM
+-- Generation Time: Jan 28, 2021 at 03:39 PM
 -- Server version: 10.4.17-MariaDB
 -- PHP Version: 7.3.25
 
@@ -54,6 +54,8 @@ CREATE TABLE `act_user_detail` (
   `gender` varchar(1) DEFAULT 'M',
   `birth_date` date NOT NULL,
   `birth_place` varchar(100) DEFAULT NULL,
+  `avatar_filename` varchar(255) DEFAULT NULL,
+  `avatar_file_url` varchar(255) DEFAULT NULL,
   `update_dtm` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
@@ -85,15 +87,6 @@ CREATE TABLE `act_user_status` (
   `act_user_status_id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
---
--- Dumping data for table `act_user_status`
---
-
-INSERT INTO `act_user_status` (`act_user_status_id`, `name`) VALUES
-(1, 'Active'),
-(2, 'Inactive'),
-(3, 'Banned');
 
 -- --------------------------------------------------------
 
@@ -140,7 +133,7 @@ CREATE TABLE `post_article_counter` (
   `article_id` int(11) NOT NULL,
   `view_by` int(11) NOT NULL,
   `num_viewed` int(11) NOT NULL DEFAULT 0,
-  `num_commented` int(11) NOT NULL,
+  `num_commented` int(11) NOT NULL DEFAULT 0,
   `read_confirm_dtm` datetime DEFAULT NULL,
   `liked` int(1) NOT NULL DEFAULT 0 COMMENT '0=normal; 1=like'
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
@@ -280,7 +273,7 @@ ALTER TABLE `act_user_follows`
 -- AUTO_INCREMENT for table `act_user_status`
 --
 ALTER TABLE `act_user_status`
-  MODIFY `act_user_status_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `act_user_status_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `post_article`
