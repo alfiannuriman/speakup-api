@@ -64,6 +64,11 @@ switch ($request) {
         $postLikesModule = new App\PostLikes;
         return $postLikesModule->store();
         break;
+
+    case ($request == '/post/likes' && $request_method == 'GET'):
+        $postLikesModule = new App\PostLikes;
+        return $postLikesModule->show();
+        break;
     
     default:
         return Lib\Response::restJSON([

@@ -42,6 +42,48 @@ class PostLikes
         }
     }
 
+    public function show()
+    {
+        try {
+
+            $article_id = $_GET['article_id'];
+
+            if (isset($article_id)) {
+                return Response::apiResponse(200, 'Get Post Liked Successfully', $this->getPostLike($article_id));
+            } else {
+                return Response::apiResponse(400, 'Post Not Found', []);
+            }
+
+        } catch (\Exception $e) {
+            return Response::apiResponse(500, $e->getMessage(), []);
+        }
+    }
+
+    // GET LIST OF USER WHO LIKED THE POST
+    protected function getPostLike($article_id)
+    {
+        try {
+
+            $db = new Database();
+
+            $query = "
+                SELECT post_article_counter.*, act_users.user_id AS user_id, act_users.name AS full_name
+                FROM post_article_counter JOIN act_users ON act_users.user_id = post_article_counter.view_by
+                WHERE article_id = :article_id AND liked = :liked_status
+            ";
+
+            $query_params = [
+                ':article_id' => $article_id,
+                'liked_status' => self::LIKE_STATUS_LIKED
+            ];
+
+            return $db->prepareQuery($query, $query_params)->get();
+
+        } catch (\PDOException $e) {
+            throw $e;
+        }
+    }
+
     protected function savePostLike($article_id)
     {
         try {
