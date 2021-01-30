@@ -14,6 +14,15 @@ use \App\Auth;
 
 class User
 {
+    public function index()
+    {
+        try {
+            return Response::apiResponse(200, 'Get user list successfully', $this->getUserLists($_GET));
+        } catch (\Exception $e) {
+            return Response::apiResponse(500, $e->getMessage(), []);
+        }
+    }
+
     public function show()
     {
         try {
@@ -52,6 +61,24 @@ class User
 
         } catch (\Exception $e) {
             return Response::apiResponse(500, $e->getMessage());
+        }
+    }
+
+    protected function getUserLists($params)
+    {
+        try {
+            $db = new Database();
+            
+            $query = "SELECT user.code AS username, user.name AS full_name, detail.avatar_filename, detail.avatar_file_url
+            FROM act_users user LEFT JOIN act_user_detail detail ON detail.user_id = user.user_id
+            WHERE user.name LIKE :searched_user";
+            
+            $query_params = [':searched_user' => '%' . $params['full_name'] . '%'];
+
+            return $db->prepareQuery($query, $query_params)->get();
+
+        } catch (\PDOException $e) {
+            throw $e;
         }
     }
 
