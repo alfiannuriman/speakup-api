@@ -74,6 +74,16 @@ switch ($request) {
         $userModule = new App\User;
         return $userModule->index();
         break;
+
+    case ($request == '/user/followers' && $request_method == 'GET'):
+        $userModule = new App\User;
+        return $userModule->followers();
+        break;
+
+    case ($request == '/user/followings' && $request_method == 'GET'):
+        $userModule = new App\User;
+        return $userModule->following();
+        break;
     
     default:
         return Lib\Response::restJSON([

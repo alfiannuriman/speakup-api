@@ -64,12 +64,52 @@ class User
         }
     }
 
+    public function followers()
+    {
+        try {
+            $user_id = null;
+            $user = Auth::getLoggedUser();
+
+            if (isset($_GET['user_id'])) {
+                $user_id = $_GET['user_id'];
+            } else if ($user !== false) {
+                $user_id = $user->user_id;
+            } else {
+                return Response::apiResponse(400, 'Theres no data found', []);
+            }
+
+            return Response::apiResponse(200, 'Get user followers list successfully', $this->getUserFollowers($user_id));
+        } catch (\Exception $e) {
+            return Response::apiResponse(500, $e->getMessage(), []);
+        }
+    }
+
+    public function following()
+    {
+        try {
+            $user_id = null;
+            $user = Auth::getLoggedUser();
+
+            if (isset($_GET['user_id'])) {
+                $user_id = $_GET['user_id'];
+            } else if ($user !== false) {
+                $user_id = $user->user_id;
+            } else {
+                return Response::apiResponse(400, 'Theres no data found', []);
+            }
+
+            return Response::apiResponse(200, 'Get user following list successfully', $this->getUserFollowings($user_id));
+        } catch (\Exception $e) {
+            return Response::apiResponse(500, $e->getMessage(), []);
+        }
+    }
+
     protected function getUserLists($params)
     {
         try {
             $db = new Database();
             
-            $query = "SELECT user.code AS username, user.name AS full_name, detail.avatar_filename, detail.avatar_file_url
+            $query = "SELECT user.user_id AS user_id, user.code AS username, user.name AS full_name, detail.avatar_filename, detail.avatar_file_url
             FROM act_users user LEFT JOIN act_user_detail detail ON detail.user_id = user.user_id
             WHERE user.name LIKE :searched_user";
             
@@ -97,8 +137,8 @@ class User
             $user_profile = $db->prepareQuery($query, $query_params)->first();
 
             if ($user_profile !== false) {
-                $user_profile->followers = $this->getUserFollower($user->user_id);
-                $user_profile->following = $this->getUserFollowing($user->user_id);
+                $user_profile->followers = $this->getUserTotalFollower($user->user_id);
+                $user_profile->following = $this->getUserTotalFollowing($user->user_id);
             }
 
             return $user_profile;
@@ -108,7 +148,7 @@ class User
         }
     }
 
-    protected function getUserFollower($user_id)
+    protected function getUserTotalFollower($user_id)
     {
         try {
             $db = new Database();
@@ -124,8 +164,47 @@ class User
         }
     }
 
+    protected function getUserFollowers($user_id)
+    {
+        try {
+            $db = new Database();
+            
+            $query = "
+                SELECT user.user_id AS user_id, user.code AS username, user.name AS full_name, detail.avatar_filename, detail.avatar_file_url
+                FROM act_user_follows JOIN act_users user ON user.user_id = act_user_follows.subject_id
+                LEFT JOIN act_user_detail detail ON detail.user_id = user.user_id
+                WHERE act_user_follows.status = 0 AND act_user_follows.object_id = :user_id
+            ";
 
-    protected function getUserFollowing($user_id)
+            $query_params = [':user_id' => $user_id];
+            return $db->prepareQuery($query, $query_params)->get();
+
+        } catch (\PDOException $e) {
+            throw $e;
+        }
+    }
+
+    protected function getUserFollowings($user_id)
+    {
+        try {
+            $db = new Database();
+            
+            $query = "
+                SELECT user.user_id AS user_id, user.code AS username, user.name AS full_name, detail.avatar_filename, detail.avatar_file_url
+                FROM act_user_follows JOIN act_users user ON user.user_id = act_user_follows.object_id
+                LEFT JOIN act_user_detail detail ON detail.user_id = user.user_id
+                WHERE act_user_follows.status = 0 AND act_user_follows.subject_id = :user_id
+            ";
+
+            $query_params = [':user_id' => $user_id];
+            return $db->prepareQuery($query, $query_params)->get();
+
+        } catch (\PDOException $e) {
+            throw $e;
+        }
+    }
+
+    protected function getUserTotalFollowing($user_id)
     {
         try {
             $db = new Database();
