@@ -66,10 +66,10 @@ class Post
             if ($user !== false) {
 
                 $query = "
-                    SELECT *, act_users.name AS created_by_name FROM post_article
-                    JOIN post_article_subjects ON post_article_subjects.article_id = post_article.article_id
+                    SELECT *, act_users.name AS created_by_name, IFNULL((SELECT liked FROM post_article_counter WHERE article_id = post_article.article_id AND view_by = :user_id), 0) AS liked
+                    FROM post_article JOIN post_article_subjects ON post_article_subjects.article_id = post_article.article_id
                     JOIN act_users ON act_users.user_id = post_article.created_by
-                    WHERE post_article_subjects.subject_id = :user_id 
+                    WHERE post_article_subjects.subject_id = :user_id
                 ";
 
                 $query_params = [];
