@@ -124,8 +124,8 @@ class Post
             if ($user !== false) {
 
                 $query = "
-                    SELECT post_article.*, act_users.name AS created_by_name FROM post_article
-                    JOIN act_users ON act_users.user_id = post_article.created_by
+                    SELECT post_article.*, act_users.name AS created_by_name, IFNULL((SELECT liked FROM post_article_counter WHERE article_id = post_article.article_id AND view_by = :user_id), 0) AS liked
+                    FROM post_article JOIN act_users ON act_users.user_id = post_article.created_by
                     WHERE post_article.created_by = :user_id 
                 ";
 
