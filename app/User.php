@@ -6,11 +6,13 @@ require_once __DIR__ . '/../lib/Database.php';
 require_once __DIR__ . '/../lib/Response.php';
 
 require_once __DIR__ . '/../app/Auth.php';
+require_once __DIR__ . '/../app/Post.php';
 
 use \Lib\Database;
 use \Lib\Response;
 
 use \App\Auth;
+use \App\Post;
 
 class User
 {
@@ -26,14 +28,19 @@ class User
     public function show()
     {
         try {
+            $user_id = null;
             $user = Auth::getLoggedUser();
 
-            if ($user !== false) {
-                $user_profile = $this->getUserProfile($user);
-                return Response::apiResponse(200, 'Profile getted successfully', $user_profile);
+            if (isset($_GET['user_id'])) {
+                $user_id = $_GET['user_id'];
+            } else if ($user !== false) {
+                $user_id = $user->user_id;
             } else {
                 return Response::apiResponse(401, 'Access token not found');
             }
+
+            $user_profile = $this->getUserProfile($user_id);
+            return Response::apiResponse(200, 'Profile getted successfully', $user_profile);
 
         } catch (\Exception $e) {
             return Response::apiResponse(500, $e->getMessage());
@@ -122,7 +129,7 @@ class User
         }
     }
 
-    protected function getUserProfile(Object $user)
+    protected function getUserProfile($user_id)
     {
         try {
             $db = new Database();
@@ -132,14 +139,15 @@ class User
                 LEFT JOIN act_user_detail AS detail ON detail.user_id = user.user_id
                 WHERE user.user_id = :user_id";
             
-            $query_params = [':user_id' => $user->user_id];
+            $query_params = [':user_id' => $user_id];
 
             $user_profile = $db->prepareQuery($query, $query_params)->first();
+            $user_profile->followers = $this->getUserTotalFollower($user_id);
+            $user_profile->following = $this->getUserTotalFollowing($user_id);
 
-            if ($user_profile !== false) {
-                $user_profile->followers = $this->getUserTotalFollower($user->user_id);
-                $user_profile->following = $this->getUserTotalFollowing($user->user_id);
-            }
+            $post_module = new Post();
+
+            $user_profile->posts = $post_module->getOwnedPost($user_id);
 
             return $user_profile;
 

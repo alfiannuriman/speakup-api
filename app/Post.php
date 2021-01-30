@@ -112,6 +112,63 @@ class Post
         }
     }
 
+    public function getOwnedPost($user_id, $params = null)
+    {
+        try {
+
+            $db = new Database();
+            $user = \App\Auth::getLoggedUser();
+
+            $response = [];
+
+            if ($user !== false) {
+
+                $query = "
+                    SELECT post_article.*, act_users.name AS created_by_name FROM post_article
+                    JOIN act_users ON act_users.user_id = post_article.created_by
+                    WHERE post_article.created_by = :user_id 
+                ";
+
+                $query_params = [];
+
+                if (!is_null($params)) {
+                    
+                    if (isset($params['article_id'])) {
+                        $query .= " AND article_id = :article_id";
+                        $query_params[':article_id'] = $params['article_id'];
+                    }
+
+                    if (isset($params['scope'])) {
+                        $query .= " AND scope = :scope";
+                        $query_params[':scope'] = $params['scope'];
+                    }
+
+                    if (isset($params['limit'])) {
+                        $query .= " LIMIT :limited";
+                        $query_params[':limited'] = $params['limit'];
+                    }
+
+                }
+
+                $query_params[':user_id'] = $user_id;
+
+                $posts = $db->prepareQuery($query, $query_params)->get();
+
+                if (count($posts) > 0) {
+                    foreach ($posts as $key => $post) {
+                        $post->medias = $this->getPostMedia($post->article_id);
+                        array_push($response, $post);
+                    }
+                }
+            }
+
+            return $response;
+
+        } catch (\PDOException $e) {
+            throw $e;
+        }
+    }
+
     protected function getPostMedia($article_id)
     {
         try {
