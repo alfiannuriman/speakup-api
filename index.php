@@ -8,6 +8,7 @@ require_once 'app/Post.php';
 require_once 'app/User.php';
 require_once 'app/PostCounterSummary.php';
 require_once 'app/PostLikes.php';
+require_once 'app/PostComment.php';
 
 $request = explode('?', $_SERVER['REQUEST_URI'], 2)[0];
 $request_method = $_SERVER['REQUEST_METHOD'];
@@ -83,6 +84,11 @@ switch ($request) {
     case ($request == '/user/followings' && $request_method == 'GET'):
         $userModule = new App\User;
         return $userModule->following();
+        break;
+
+    case ($request == '/post/comments' && $request_method == 'POST'):
+        $postCommentModule = new App\PostComment;
+        return $postCommentModule->store();
         break;
     
     default:
