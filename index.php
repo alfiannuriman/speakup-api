@@ -90,6 +90,11 @@ switch ($request) {
         $postCommentModule = new App\PostComment;
         return $postCommentModule->store();
         break;
+
+    case ($request == '/post/comments' && $request_method == 'GET'):
+        $postCommentModule = new App\PostComment;
+        return $postCommentModule->show();
+        break;
     
     default:
         return Lib\Response::restJSON([
