@@ -39,7 +39,9 @@ class User
                 return Response::apiResponse(401, 'Access token not found');
             }
 
-            $user_profile = $this->getUserProfile($user_id);
+            $followed_by = ($user !== false) ? $user->user_id : null;
+
+            $user_profile = $this->getUserProfile($user_id, $followed_by);
             return Response::apiResponse(200, 'Profile getted successfully', $user_profile);
 
         } catch (\Exception $e) {
@@ -129,7 +131,7 @@ class User
         }
     }
 
-    protected function getUserProfile($user_id)
+    protected function getUserProfile($user_id, $followed_by = null)
     {
         try {
             $db = new Database();
@@ -144,6 +146,7 @@ class User
             $user_profile = $db->prepareQuery($query, $query_params)->first();
             $user_profile->followers = $this->getUserTotalFollower($user_id);
             $user_profile->following = $this->getUserTotalFollowing($user_id);
+            $user_profile->is_followed = !is_null($followed_by) ? $this->checkFollowedStatus($followed_by, $user_id) : false;
 
             $post_module = new Post();
 
@@ -293,6 +296,23 @@ class User
                 return false;
             }
 
+        } catch (\PDOException $e) {
+            throw $e;
+        }
+    }
+
+    protected function checkFollowedStatus($subject_id, $object_id)
+    {
+        try {
+            $db = new Database();
+            
+            $query = "SELECT * FROM `act_user_follows` WHERE subject_id = :subject_id AND object_id = :object_id AND `status` = 0";
+            $query_params = [
+                'subject_id' => $subject_id,
+                'object_id' => $object_id
+            ];
+
+            return $db->prepareQuery($query, $query_params)->exists();
         } catch (\PDOException $e) {
             throw $e;
         }
