@@ -113,6 +113,62 @@ class User
         }
     }
 
+    public function follow()
+    {
+        try {
+            $user = Auth::getLoggedUser();
+
+            if ($user !== false) {
+
+                $request = $_POST;
+
+                if (isset($request['user_id'])) {
+                    if ($this->saveUserFollow($user->user_id, $request['user_id'])) {
+                        return Response::apiResponse(200, 'User Followed successfully');
+                    } else {
+                        return Response::apiResponse(500, 'Failed to follow user');
+                    }
+                } else {
+                    return Response::apiResponse(404, 'Cannot find user to follow');
+                }
+
+            } else {
+                return Response::apiResponse(401, 'Access token not found');
+            }
+
+        } catch (\Exception $e) {
+            return Response::apiResponse(500, $e->getMessage());
+        }
+    }
+
+    public function unfollow()
+    {
+        try {
+            $user = Auth::getLoggedUser();
+
+            if ($user !== false) {
+
+                $request = $_POST;
+
+                if (isset($request['user_id'])) {
+                    if ($this->saveUserUnfollow($user->user_id, $request['user_id'])) {
+                        return Response::apiResponse(200, 'User Unfollowed successfully');
+                    } else {
+                        return Response::apiResponse(500, 'Failed to unfollow user');
+                    }
+                } else {
+                    return Response::apiResponse(404, 'Cannot find user to unfollow');
+                }
+
+            } else {
+                return Response::apiResponse(401, 'Access token not found');
+            }
+
+        } catch (\Exception $e) {
+            return Response::apiResponse(500, $e->getMessage());
+        }
+    }
+
     protected function getUserLists($params)
     {
         try {
@@ -313,6 +369,73 @@ class User
             ];
 
             return $db->prepareQuery($query, $query_params)->exists();
+        } catch (\PDOException $e) {
+            throw $e;
+        }
+    }
+
+    protected function saveUserFollow($subject_id, $object_id)
+    {
+        try {
+            $db = new Database();
+            
+            $query_global_params = [
+                'subject_id' => $subject_id,
+                'object_id' => $object_id
+            ];
+
+            $query_find_follow = "SELECT * FROM `act_user_follows` WHERE subject_id = :subject_id AND object_id = :object_id AND `status` = 0";
+            $find_follow = $db->prepareQuery($query_find_follow, $query_global_params)->first();
+
+            if ($find_follow == false) {
+                $query_create_follow = "
+                    INSERT INTO `act_user_follows`(
+                        `subject_id`, `object_id`, `start_dtm`
+                    ) VALUES (
+                        :subject_id, :object_id, :start_dtm
+                )";
+
+                $query_global_params['start_dtm'] = date('Y-m-d H:i:s');
+
+                return $db->prepareQuery($query_create_follow, $query_global_params);
+            } else {
+                return true;
+            }
+
+        } catch (\PDOException $e) {
+            throw $e;
+        }
+    }
+
+    protected function saveUserUnfollow($subject_id, $object_id)
+    {
+        try {
+            $db = new Database();
+            
+            $query_global_params = [
+                'subject_id' => $subject_id,
+                'object_id' => $object_id
+            ];
+
+            $query_find_follow = "SELECT * FROM `act_user_follows` WHERE subject_id = :subject_id AND object_id = :object_id AND `status` = 0";
+            $find_follow = $db->prepareQuery($query_find_follow, $query_global_params)->first();
+
+            if ($find_follow !== false) {
+                $query_create_follow = "
+                    INSERT INTO `act_user_follows`(
+                        `subject_id`, `object_id`, `start_dtm`
+                    ) VALUES (
+                        :subject_id, :object_id, :start_dtm
+                )";
+
+                $query_delete_follow = "DELETE FROM `act_user_follows` WHERE user_follow_id = :user_follow_id";
+                $query_delete_follow_params = [':user_follow_id' => $find_follow->user_follow_id];
+
+                return $db->prepareQuery($query_delete_follow, $query_delete_follow_params);
+            } else {
+                return true;
+            }
+
         } catch (\PDOException $e) {
             throw $e;
         }

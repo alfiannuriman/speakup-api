@@ -95,6 +95,16 @@ switch ($request) {
         $postCommentModule = new App\PostComment;
         return $postCommentModule->show();
         break;
+
+    case ($request == '/user/follows' && $request_method == 'POST'):
+        $userModule = new App\User;
+        return $userModule->follow();
+        break;
+
+    case ($request == '/user/unfollows' && $request_method == 'POST'):
+        $userModule = new App\User;
+        return $userModule->unfollow();
+        break;
     
     default:
         return Lib\Response::restJSON([
